@@ -1,0 +1,15 @@
+sqlite3SetJoinExpr
+
+iOfst
+
+SrcItem
+
+sqlite3ProcessJoin
+
+sqlite3WhereBegin
+
+constructAutomaticIndex
+
+sqlite3WhereRightJoinLoop
+
+sqlite3ExprCodeGetColumnOfTable

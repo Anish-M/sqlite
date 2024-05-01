@@ -6220,6 +6220,7 @@ WhereInfo *sqlite3WhereBegin(
      && !(ExprHasProperty(pX, EP_InnerON)          /* Condition (3) */
           && (pTabList->a[0].fg.jointype & JT_LTORJ)!=0 )
     ){
+      // example of early break
       sqlite3ExprIfFalse(pParse, pX, pWInfo->iBreak, SQLITE_JUMPIFNULL);
       pT->wtFlags |= TERM_CODED;
     }
@@ -6716,6 +6717,7 @@ void sqlite3WhereEnd(WhereInfo *pWInfo){
   /* Generate loop termination code.
   */
   VdbeModuleComment((v, "End WHERE-core"));
+  // only add premature break if i == 0
   for(i=pWInfo->nLevel-1; i>=0; i--){
     int addr;
     pLevel = &pWInfo->a[i];
@@ -6841,10 +6843,16 @@ void sqlite3WhereEnd(WhereInfo *pWInfo){
 #endif
     if( pLevel->iLeftJoin ){
       int ws = pLoop->wsFlags;
+      // this tells if at least 1 row on the right has been matched
       addr = sqlite3VdbeAddOp1(v, OP_IfPos, pLevel->iLeftJoin); VdbeCoverage(v);
+      // if the level is not 0 we shall add a no-hope flag to break from the loop here instead
+      if (pLevel != &pWInfo->a[0]) {
+        sqlite3VdbeResolveLabel(v, pLevel->addrBrk);
+      /*
       assert( (ws & WHERE_IDX_ONLY)==0 || (ws & WHERE_INDEXED)!=0 );
       if( (ws & WHERE_IDX_ONLY)==0 ){
         assert( pLevel->iTabCur==pTabList->a[pLevel->iFrom].iCursor );
+        // this adds a NULL row to the cursor to be matched with
         sqlite3VdbeAddOp1(v, OP_NullRow, pLevel->iTabCur);
       }
       if( (ws & WHERE_INDEXED)
@@ -6861,9 +6869,13 @@ void sqlite3WhereEnd(WhereInfo *pWInfo){
       if( pLevel->op==OP_Return ){
         sqlite3VdbeAddOp2(v, OP_Gosub, pLevel->p1, pLevel->addrFirst);
       }else{
+        // this jumps to the loop to match with the NULL row
         sqlite3VdbeGoto(v, pLevel->addrFirst);
       }
-      sqlite3VdbeJumpHere(v, addr);
+      */
+        // this enables the checks above
+        sqlite3VdbeJumpHere(v, addr);
+      }
     }
     VdbeModuleComment((v, "End WHERE-loop%d: %s", i,
                      pWInfo->pTabList->a[pLevel->iFrom].pTab->zName));
