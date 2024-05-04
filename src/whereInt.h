@@ -71,6 +71,7 @@ struct WhereRightJoin {
 ** WhereInfo.a[WhereInfo.nLevel-1] being the inner loop.
 */
 struct WhereLevel {
+  int shortCircuit;     /* Memory cell used to implement SHORT CIRCUIT */
   int iLeftJoin;        /* Memory cell used to implement LEFT OUTER JOIN */
   int iTabCur;          /* The VDBE cursor used to access the table */
   int iIdxCur;          /* The VDBE cursor used to access pIdx */

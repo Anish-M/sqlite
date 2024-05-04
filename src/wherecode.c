@@ -1417,6 +1417,11 @@ Bitmask sqlite3WhereCodeOneLoopStart(
     sqlite3VdbeAddOp2(v, OP_Integer, 0, pLevel->iLeftJoin);
     VdbeComment((v, "init LEFT JOIN no-match flag"));
   }
+  if ( pLevel->iFrom>0 ) {
+    pLevel->shortCircuit = ++pParse->nMem;
+    sqlite3VdbeAddOp2(v, OP_Integer, 0, pLevel->shortCircuit);
+    VdbeComment((v, "init SHORT CIRCUIT no-match flag"));
+  }
 
   /* Compute a safe address to jump to if we discover that the table for
   ** this loop is empty and can never contribute content. */
@@ -2638,6 +2643,11 @@ Bitmask sqlite3WhereCodeOneLoopStart(
     sqlite3ReleaseTempRange(pParse, r, nPk+1);
   }
 
+  if ( pLevel->shortCircuit ){
+    pLevel->addrFirst = sqlite3VdbeCurrentAddr(v);
+    sqlite3VdbeAddOp2(v, OP_Integer, 1, pLevel->shortCircuit);
+    VdbeComment((v, "record SHORT CIRCUIT hit"));
+  }
   /* For a LEFT OUTER JOIN, generate code that will record the fact that
   ** at least one row of the right table has matched the left table.
   */

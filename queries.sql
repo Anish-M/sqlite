@@ -38,6 +38,27 @@ FROM title as t LEFT OUTER JOIN (
 ) AS r1 ON t.id = r1.movie_id;
 */
 
+SELECT COUNT(*)
+FROM titles AS t, people AS p1, people AS p2, crew AS c1, crew AS c2, crew AS c3, crew AS c4
+WHERE t.title_id = c1.title_id
+  AND c2.title_id = c1.title_id
+  AND c1.person_id < c2.person_id
+  AND c3.title_id < c1.title_id
+  AND c3.person_id = c1.person_id
+  AND c4.title_id = c3.title_id
+  AND c4.person_id = c2.person_id
+  AND p1.person_id = c1.person_id
+  AND p1.died < t.premiered
+  AND p2.person_id = c2.person_id
+  AND p2.died < t.premiered;
+/*
+29495468
+NORMAL:
+
+SHORT CIRCUIT:
+Run Time: real 353.504 user 189.756479 sys 162.934177
+*/
+
 SELECT COUNT(c.title_id) FROM crew AS c LEFT OUTER JOIN (
   SELECT c.title_id AS title_id, r4.second_person AS second_person FROM crew AS c LEFT OUTER JOIN (
     SELECT r3.title_id AS title_id, r3.person_id AS person_id, r3.second_person AS second_person FROM people AS p LEFT OUTER JOIN (
@@ -68,9 +89,17 @@ SELECT COUNT(c.title_id) FROM crew AS c INNER JOIN (
 ) AS r5 ON c.title_id = r5.title_id AND c.person_id = r5.second_person;
 /*
 29495468
+NORMAL:
 Run Time: real 452.911 user 261.760857 sys 190.045020
 Run Time: real 442.354 user 253.558389 sys 187.768525
 Run Time: real 444.671 user 254.469738 sys 189.118673
+Run Time: real 440.968 user 254.694118 sys 185.261065
+Run Time: real 429.153 user 246.082548 sys 182.085071
+Run Time: real 451.201 user 258.002531 sys 192.005866
+SHORT CIRCUIT:
+Run Time: real 435.042 user 249.390284 sys 184.647243
+Run Time: real 435.702 user 249.048338 sys 185.607531
+Run Time: real 436.310 user 250.347266 sys 184.919029
 */
 /*
 addr  opcode         p1    p2    p3    p4             p5  comment      
@@ -324,7 +353,16 @@ SELECT COUNT(c.title_id) FROM crew AS c INNER JOIN (
 ) AS r5 ON c.title_id = r5.title_id AND c.person_id = r5.second_person;
 /*
 132293052
+NORMAL:
 Run Time: real 738.733 user 432.403519 sys 304.251479
+Run Time: real 766.969 user 432.834241 sys 332.112414
+Run Time: real 743.598 user 431.371409 sys 310.135277
+SHORT CIRCUIT:
+Run Time: real 717.443 user 417.946600 sys 295.817412
+
+Run Time: real 706.977 user 412.520070 sys 291.665197
+Run Time: real 710.709 user 417.456979 sys 291.635787
+Run Time: real 713.713 user 420.944296 sys 291.146650
 */
 
 SELECT COUNT(r3.title_id) FROM people AS p LEFT OUTER JOIN (
@@ -347,7 +385,15 @@ SELECT COUNT(r3.title_id) FROM people AS p INNER JOIN (
 ) AS r3 ON p.person_id = r3.second_person WHERE p.died <= r3.premiered;
 /*
 247684
+Normal:
 Run Time: real 173.062 user 77.310694 sys 95.290812
+Run Time: real 160.431 user 75.026153 sys 84.963356
+Run Time: real 166.721 user 76.933212 sys 89.282380
+
+SHORT CIRCUIT:
+Run Time: real 167.499 user 77.243342 sys 89.892990
+Run Time: real 168.609 user 77.807134 sys 90.424548
+Run Time: real 170.059 user 78.296366 sys 91.337816
 */
 
 SELECT COUNT(r2.title_id) FROM people AS p LEFT OUTER JOIN (
@@ -367,6 +413,17 @@ SELECT COUNT(r2.title_id) FROM people AS p INNER JOIN (
 
 */
 
+SELECT COUNT(t.title_id) FROM titles AS t INNER JOIN (
+  SELECT p.died AS died FROM people AS p INNER JOIN crew AS c ON p.person_id = c.person_id
+) AS r1 WHERE r1.died < t.premiered;
+/*
+
+Normal:
+
+SHORT CIRCUIT:
+
+*/
+
 SELECT COUNT(r1.title_id) FROM people AS p LEFT OUTER JOIN (
   SELECT t.premiered AS premiered, c.title_id AS title_id, c.person_id AS person_id FROM titles AS t INNER JOIN crew AS c ON t.title_id = c.title_id
 ) AS r1 ON p.person_id = r1.person_id WHERE p.died <= r1.premiered;
@@ -382,6 +439,10 @@ SELECT COUNT(r1.title_id) FROM people AS p INNER JOIN (
 370605
 Run Time: real 160.834 user 74.719162 sys 85.694244
 Run Time: real 166.178 user 73.210529 sys 92.570072
+
+SHORT CIRCUIT:
+Run Time: real 154.651 user 73.507444 sys 80.530754
+Run Time: real 156.533 user 73.335796 sys 82.592483
 */
 
 

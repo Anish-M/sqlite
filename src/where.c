@@ -6841,14 +6841,17 @@ void sqlite3WhereEnd(WhereInfo *pWInfo){
       VdbeCoverage(v);
     }
 #endif
+
+    if ( i > 0 && pLevel->shortCircuit ) {
+      // if the level is not 0 we shall add a no-hope flag to break from the loop here instead
+      addr = sqlite3VdbeAddOp1(v, OP_IfPos, pLevel->shortCircuit); VdbeCoverage(v);
+      sqlite3VdbeResolveLabel(v, (&pWInfo->a[i - 1])->addrBrk);
+      sqlite3VdbeJumpHere(v, addr);
+    }
     if( pLevel->iLeftJoin ){
       int ws = pLoop->wsFlags;
       // this tells if at least 1 row on the right has been matched
       addr = sqlite3VdbeAddOp1(v, OP_IfPos, pLevel->iLeftJoin); VdbeCoverage(v);
-      // if the level is not 0 we shall add a no-hope flag to break from the loop here instead
-      if (pLevel != &pWInfo->a[0]) {
-        sqlite3VdbeResolveLabel(v, pLevel->addrBrk);
-      /*
       assert( (ws & WHERE_IDX_ONLY)==0 || (ws & WHERE_INDEXED)!=0 );
       if( (ws & WHERE_IDX_ONLY)==0 ){
         assert( pLevel->iTabCur==pTabList->a[pLevel->iFrom].iCursor );
@@ -6872,10 +6875,8 @@ void sqlite3WhereEnd(WhereInfo *pWInfo){
         // this jumps to the loop to match with the NULL row
         sqlite3VdbeGoto(v, pLevel->addrFirst);
       }
-      */
-        // this enables the checks above
-        sqlite3VdbeJumpHere(v, addr);
-      }
+      // this enables the checks above
+      sqlite3VdbeJumpHere(v, addr);
     }
     VdbeModuleComment((v, "End WHERE-loop%d: %s", i,
                      pWInfo->pTabList->a[pLevel->iFrom].pTab->zName));
