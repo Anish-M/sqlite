@@ -3215,10 +3215,8 @@ SQLITE_NOINLINE void sqlite3WhereRightJoinLoop(
   pParse->withinRJSubrtn--;
 }
 
-static void whereDoTTJBackjump(
-    Parse *pParse,
-    WhereInfo *pWInfo,
-    WhereLevel *pLevel)
+/* Function definition for whereDoTTJBackjump */
+void whereDoTTJBackjump(Parse *pParse, WhereInfo *pWInfo, WhereLevel *pLevel)
 {
   Vdbe *v = pParse->pVdbe;
 

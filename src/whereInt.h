@@ -664,31 +664,10 @@ void sqlite3WhereTabFuncArgs(Parse *, SrcItem *, WhereClause *);
 /*
 ** Handle TTJ backjumping for a given level
 */
-static void whereDoTTJBackjump(
+void whereDoTTJBackjump(
     Parse *pParse,
     WhereInfo *pWInfo,
-    WhereLevel *pLevel)
-{
-  Vdbe *v = pParse->pVdbe;
-
-  /* Label for backjump target */
-  sqlite3VdbeResolveLabel(v, pLevel->ttjBackjumpAddr);
-
-  /* If this is parent relation, delete from hash table */
-  if (pLevel->iTabCur == pLevel->ttjParent)
-  {
-    sqlite3VdbeAddOp1(v, OP_Delete, pLevel->ttjHashTable);
-  }
-  else
-  {
-    /* Otherwise propagate backjump to parent */
-    int iParentLevel = pLevel->iFrom - 1;
-    if (iParentLevel >= 0)
-    {
-      whereDoTTJBackjump(pParse, pWInfo, &pWInfo->a[iParentLevel]);
-    }
-  }
-}
+    WhereLevel *pLevel);
 
 /* Add to optimization flags */
 #define SQLITE_TTJ 0x00000800 /* Enable TTJ optimization */
