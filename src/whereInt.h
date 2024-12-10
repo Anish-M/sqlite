@@ -119,6 +119,9 @@ struct WhereLevel
   int ttjParent;       /* Parent relation for TTJ backjumping */
   int ttjHashTable;    /* Register holding TTJ hash table */
   int ttjBackjumpAddr; /* Address to jump to for backjumping */
+  int regTOuter;       /* Register holding current outer tuple */
+  int regMatches;      /* Register for current matches */
+  int regMatchCount;   /* Register for number of matches */
 };
 
 /*
